@@ -107,7 +107,7 @@ with col1:
         }
     )
 
-    st.subheader("2. Node Coordinates (Direct Input in Meters)")
+    st.subheader("2. Node Coordinates")
     nodes_df = st.data_editor(st.session_state.nodes_data, num_rows="dynamic", key="nodes_editor")
 
 with col2:
