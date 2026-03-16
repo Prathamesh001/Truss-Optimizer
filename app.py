@@ -62,13 +62,13 @@ if 'nodes_data' not in st.session_state:
 
 # --- 1. UI INPUTS ---
 st.sidebar.header("Library Presets")
-if st.sidebar.button("Load King Post (Benchmark)"):
+if st.sidebar.button("King Post"):
     load_preset_king_post()
     st.rerun()
-if st.sidebar.button("Load Warren Truss (2-Bay)"):
+if st.sidebar.button("Warren Truss"):
     load_preset_warren()
     st.rerun()
-if st.sidebar.button("Load Long Pratt Bridge (6-Bay)"):
+if st.sidebar.button("Long Pratt Bridge"):
     load_preset_long_pratt()
     st.rerun()
 
