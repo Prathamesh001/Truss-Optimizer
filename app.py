@@ -6,7 +6,7 @@ from scipy.optimize import differential_evolution
 import math
 import matplotlib.pyplot as plt
 
-st.set_page_config(page_title="Truss Optimizer Pro", layout="wide")
+st.set_page_config(page_title="Truss Optimizer", layout="wide")
 st.title("Differential Evolution Truss Optimizer")
 
 # --- 0. SESSION STATE & PRESETS ---
