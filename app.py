@@ -344,7 +344,7 @@ if st.button("Run Optimization", type="primary"):
         
         bounds = [(min_height, max_height)] + [(0, num_sections) for _ in range(num_elements)]
         
-        result = differential_evolution(evaluate_truss, bounds, maxiter=50, popsize=15, mutation=(0.5, 1.0), recombination=0.7, callback=live_update_callback)
+        result = differential_evolution(evaluate_truss, bounds, maxiter=10000, popsize=15, mutation=(0.5, 1.0), recombination=0.7, callback=live_update_callback)
         
         best_H = result.x[0]
         best_sections = np.round(result.x[1:]).astype(int)
@@ -358,7 +358,7 @@ if st.button("Run Optimization", type="primary"):
         if result.success:
             st.success(f"✅ **Optimization Converged!** The algorithm found an optimal solution in {result.nit} generations. \n\n**Minimum Weight:** {final_weight:.2f} kg")
         else:
-            st.warning(f"⚠️ **Max Iterations Reached!** The algorithm stopped because it hit the 50 generation limit before fully converging. \n\n**Reason:** {result.message} \n\n**Best Weight Found:** {final_weight:.2f} kg")
+            st.warning(f"⚠️ **Max Iterations Reached!** The algorithm stopped because it hit the 10000 generation limit before fully converging. \n\n**Reason:** {result.message} \n\n**Best Weight Found:** {final_weight:.2f} kg")
         
         col_res1, col_res2 = st.columns(2)
         with col_res1:
