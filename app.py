@@ -326,40 +326,58 @@ st.markdown("---")
 if st.button("Run Optimization", type="primary"):
     
     st.write("### Live Optimization Progress")
-    live_plot_placeholder = st.empty()
     
-    # --- NEW: Stagnation Tracker Setup ---
-    STAGNATION_LIMIT = 5          # Number of generations to look back
-    STAGNATION_TOLERANCE = 0.001  # 0.1% improvement required to keep going
-    st.session_state.best_history = []
+    # Create two columns to put the truss and the graph side-by-side
+    col_plot1, col_plot2 = st.columns(2)
+    live_truss_placeholder = col_plot1.empty()
+    live_conv_placeholder = col_plot2.empty()
+    
+    # Stagnation and History setup
+    STAGNATION_LIMIT = 5          
+    STAGNATION_TOLERANCE = 0.001  
+    st.session_state.best_history = []          # For the stopping logic (last 5)
+    st.session_state.full_history = []          # For the convergence graph (all)
     
     def live_update_callback(xk, convergence):
-        # 1. Update the live plot (Your existing code)
-        current_H = xk[0]
-        current_sections = np.round(xk[1:]).astype(int)
-        fig = plot_truss(nodes_df, elements_df, current_H, sec_indices=current_sections, title=f"Evolving... (Convergence: {convergence:.3f})")
-        live_plot_placeholder.pyplot(fig)
-        plt.close(fig)
-        
-        # 2. Evaluate the current best solution to track its weight
+        # 1. Evaluate the current best solution
         current_weight = evaluate_truss(xk)
         st.session_state.best_history.append(current_weight)
+        st.session_state.full_history.append(current_weight)
         
-        # Keep only the last 5 generations in memory
+        # 2. Update the Live Truss Plot
+        current_H = xk[0]
+        current_sections = np.round(xk[1:]).astype(int)
+        fig_truss = plot_truss(nodes_df, elements_df, current_H, sec_indices=current_sections, title=f"Evolving... (Convergence: {convergence:.3f})")
+        live_truss_placeholder.pyplot(fig_truss)
+        plt.close(fig_truss)
+        
+        # 3. Update the Live Convergence Graph
+        fig_conv, ax_conv = plt.subplots(figsize=(8, 4))
+        ax_conv.plot(range(1, len(st.session_state.full_history) + 1), st.session_state.full_history, marker='o', linestyle='-', color='teal', linewidth=2)
+        ax_conv.set_title("Convergence History", fontsize=14)
+        ax_conv.set_xlabel("Generation")
+        ax_conv.set_ylabel("Best Weight (kg)")
+        ax_conv.grid(True, linestyle='--', alpha=0.6)
+        # Dynamic Y-axis to make the drop look dramatic but readable
+        min_w = min(st.session_state.full_history)
+        max_w = max(st.session_state.full_history)
+        padding = (max_w - min_w) * 0.1 if max_w != min_w else 10
+        ax_conv.set_ylim(bottom=max(0, min_w - padding), top=max_w + padding)
+        
+        live_conv_placeholder.pyplot(fig_conv)
+        plt.close(fig_conv)
+
+        # 4. Check for stagnation (Smart Stop)
         if len(st.session_state.best_history) > STAGNATION_LIMIT:
             st.session_state.best_history.pop(0)
             
-        # 3. Check for stagnation
         if len(st.session_state.best_history) == STAGNATION_LIMIT:
             oldest_weight = st.session_state.best_history[0]
             newest_weight = st.session_state.best_history[-1]
-            
-            # Calculate the percentage improvement
             improvement = abs(oldest_weight - newest_weight) / oldest_weight
             
             if improvement <= STAGNATION_TOLERANCE:
-                # Returning True forces SciPy to immediately halt the optimization
-                return True 
+                return True # Halt optimization
 
     with st.spinner('Running Differential Evolution...'):
         num_elements = len(elements_df)
@@ -370,7 +388,6 @@ if st.button("Run Optimization", type="primary"):
         
         bounds = [(min_height, max_height)] + [(0, num_sections) for _ in range(num_elements)]
         
-        # Note: tol is set very low so the built-in convergence doesn't stop it before our custom callback does
         result = differential_evolution(
             evaluate_truss, 
             bounds, 
@@ -385,20 +402,21 @@ if st.button("Run Optimization", type="primary"):
         best_H = result.x[0]
         best_sections = np.round(result.x[1:]).astype(int)
         
+        # Final Plots 
         final_weight, final_penalty, max_disp, final_forces, opt_defs = evaluate_truss(result.x, return_results=True)
         
         final_fig = plot_truss(nodes_df, elements_df, best_H, sec_indices=best_sections, title="Final Optimized Topology")
-        live_plot_placeholder.pyplot(final_fig)
+        live_truss_placeholder.pyplot(final_fig)
         plt.close(final_fig)
         
-        # Updated success messaging to account for the custom callback
         if result.success:
             st.success(f"✅ **Optimization Converged!** The whole population reached the absolute minimum. \n\n**Minimum Weight:** {final_weight:.2f} kg")
         elif "halted" in result.message.lower():
             st.success(f"🛑 **Smart Stop Triggered!** The best design didn't improve by more than 0.1% over {STAGNATION_LIMIT} generations, saving computational time. \n\n**Minimum Weight:** {final_weight:.2f} kg")
         else:
             st.warning(f"⚠️ **Max Iterations Reached!** ({result.message}) \n\n**Best Weight Found:** {final_weight:.2f} kg")
-            
+        
+        # --- RESULTS TABLES ---
         col_res1, col_res2 = st.columns(2)
         with col_res1:
             st.write(f"**Optimal Truss Peak Height:** {best_H:.2f} m")
