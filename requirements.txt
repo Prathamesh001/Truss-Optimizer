@@ -4,3 +4,4 @@ numpy
 openseespy
 scipy
 matplotlib
+pymoo
