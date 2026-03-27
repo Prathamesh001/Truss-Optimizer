@@ -33,4 +33,6 @@ The tool leverages a metaheuristic optimization algorithm to simultaneously solv
 
 ## 👨‍💻 Author
 **Prathamesh Varma** M.E. Structural Engineering | BITS Pilani – Hyderabad Campus  
-🔗 [LinkedIn Profile](https://www.linkedin.com/in/prathameshvarma/)
+🔗 [LinkedIn Profile](https://www.linkedin.com/in/prathameshvarma/)\
+Project accomplished under the esteemed guidance of **Prof. Vasan Arunachalam**\
+🔗 [Web Link](https://www.bits-pilani.ac.in/hyderabad/a-vasan/)
