@@ -347,7 +347,7 @@ if st.button("Run Optimization", type="primary"):
         # 2. Update the Live Truss Plot
         current_H = xk[0]
         current_sections = np.round(xk[1:]).astype(int)
-        fig_truss = plot_truss(nodes_df, elements_df, current_H, sec_indices=current_sections, title=f"Evolving... (Convergence: {convergence:.3f})")
+        fig_truss = plot_truss(nodes_df, elements_df, current_H, sec_indices=current_sections, title=f"Evolving...")
         live_truss_placeholder.pyplot(fig_truss)
         plt.close(fig_truss)
         
