@@ -409,13 +409,14 @@ if st.button("Run Optimization", type="primary"):
         live_truss_placeholder.pyplot(final_fig)
         plt.close(final_fig)
         
+        # Updated success messaging 
         if result.success:
             st.success(f"✅ **Optimization Converged!** The whole population reached the absolute minimum. \n\n**Minimum Weight:** {final_weight:.2f} kg")
-        elif "halted" in result.message.lower():
-            st.success(f"🛑 **Smart Stop Triggered!** The best design didn't improve by more than 0.1% over {STAGNATION_LIMIT} generations, saving computational time. \n\n**Minimum Weight:** {final_weight:.2f} kg")
+        elif "callback" in result.message.lower() or "stop early" in result.message.lower():
+            st.success(f"🛑 **Smart Stop Triggered!** The best design didn't improve significantly over {STAGNATION_LIMIT} generations, saving computational time. \n\n**Minimum Weight:** {final_weight:.2f} kg")
         else:
             st.warning(f"⚠️ **Max Iterations Reached!** ({result.message}) \n\n**Best Weight Found:** {final_weight:.2f} kg")
-        
+            
         # --- RESULTS TABLES ---
         col_res1, col_res2 = st.columns(2)
         with col_res1:
