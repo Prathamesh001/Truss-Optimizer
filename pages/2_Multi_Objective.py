@@ -57,66 +57,6 @@ def load_preset_10_bar():
         "Load_X_N": [0.0, 0.0], 
         "Load_Y_N": [-444822.0, -444822.0]
     })
-
-def load_preset_200_bar():
-    clear_editor_keys()
-    
-    # 1. Section Properties (29 Bar Groups)
-    # The paper uses continuous areas from 0.1 to 15 in^2. 
-    # We generate 29 discrete options to map to your Streamlit catalog:
-    areas_in2 = np.linspace(0.1, 15.0, 29)
-    areas_m2 = areas_in2 * 0.00064516
-    inertias_m4 = (areas_m2**2) / 12
-    
-    st.session_state.sections_data = pd.DataFrame({
-        "Section_ID": list(range(29)),
-        "Area_m2": areas_m2,
-        "Inertia_m4": inertias_m4
-    })
-    
-    # 2. Loading Conditions
-    # 10 kips = 44482.2 N downward. 
-    # Applying loads to the first 15 standard loaded nodes from the paper.
-    loaded_nodes = [1, 2, 3, 4, 5, 6, 8, 10, 12, 14, 15, 16, 17, 18, 19]
-    st.session_state.loads_data = pd.DataFrame({
-        "Node_ID": loaded_nodes,
-        "Load_X_N": [0.0] * len(loaded_nodes),
-        "Load_Y_N": [-44482.2] * len(loaded_nodes)
-    })
-    
-    # 3. Nodes and Elements (Procedural Geometric Approximation)
-    nodes_list = []
-    elements_list = []
-    
-    # Generating a geometric grid of 77 nodes (11 bays x 7 tiers)
-    node_id = 1
-    for y in range(7):
-        for x in range(11):
-            nodes_list.append({
-                "Node_ID": node_id, 
-                "X_m": x * 7.0,  
-                "Y_m": y * 7.0,  
-                "Support_X": 1 if y == 0 and (x == 0 or x == 10) else 0,
-                "Support_Y": 1 if y == 0 and (x == 0 or x == 10) else 0
-            })
-            node_id += 1
-            
-    # Connecting the grid to form exactly 200 elements
-    elem_id = 1
-    for i in range(1, 78):
-        if elem_id > 200: break
-        if i % 11 != 0: # Horizontal members
-            elements_list.append({"Element_ID": elem_id, "Start_Node": i, "End_Node": i + 1})
-            elem_id += 1
-        if i + 11 <= 77 and elem_id <= 200: # Vertical members
-            elements_list.append({"Element_ID": elem_id, "Start_Node": i, "End_Node": i + 11})
-            elem_id += 1
-        if i % 11 != 0 and i + 12 <= 77 and elem_id <= 200: # Diagonal members
-            elements_list.append({"Element_ID": elem_id, "Start_Node": i, "End_Node": i + 12})
-            elem_id += 1
-            
-    st.session_state.nodes_data = pd.DataFrame(nodes_list)
-    st.session_state.elements_data = pd.DataFrame(elements_list)
 def load_preset_king_post():
     clear_editor_keys()
     st.session_state.sections_data = pd.DataFrame({"Section_ID": [0, 1, 2, 3, 4], "Area_m2": [0.001, 0.002, 0.004, 0.006, 0.010], "Inertia_m4": [0.01, 0.02, 0.03, 0.04, 0.05]})
@@ -165,9 +105,6 @@ if 'nodes_data' not in st.session_state:
 st.sidebar.header("Library Presets")
 if st.sidebar.button("10-Bar Benchmark"):
     load_preset_10_bar()
-    st.rerun()
-if st.sidebar.button("200-Bar Benchmark"):
-    load_preset_200_bar()
     st.rerun()
 if st.sidebar.button("King Post"):
     load_preset_king_post()
