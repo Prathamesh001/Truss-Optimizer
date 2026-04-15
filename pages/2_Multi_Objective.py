@@ -46,9 +46,9 @@ def load_preset_10_bar():
     })
     
     st.session_state.elements_data = pd.DataFrame({
-        "Element_ID": list(range(1, 11)), 
-        "Start_Node": [5, 3, 6, 4, 3, 1, 5, 6, 3, 4], 
-        "End_Node":   [3, 1, 4, 2, 4, 2, 4, 3, 2, 1]
+        "Element_ID": list(range(1, 10)), 
+        "Start_Node": [5, 3, 6, 4, 3, 1, 5, 3, 4], 
+        "End_Node":   [3, 1, 4, 2, 4, 2, 4, 2, 1]
     })
     
     # Paper Load: 100 kips downward at nodes 2 and 4. (100 kips = 444,822 Newtons)
