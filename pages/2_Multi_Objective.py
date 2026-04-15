@@ -21,6 +21,42 @@ def clear_editor_keys():
         if key in st.session_state:
             del st.session_state[key]
 
+
+def load_preset_10_bar():
+    clear_editor_keys()
+    # Paper parameters: Areas from 0.1 to 40 in^2. 
+    # Since your app uses discrete catalogs, we generate 40 evenly spaced sections.
+    areas_in2 = np.linspace(0.1, 40.0, 40)
+    areas_m2 = areas_in2 * 0.00064516 # Convert in^2 to m^2
+    inertias_m4 = (areas_m2**2) / 12 # Approximate I for penalty calculation
+    
+    st.session_state.sections_data = pd.DataFrame({
+        "Section_ID": list(range(40)),
+        "Area_m2": areas_m2,
+        "Inertia_m4": inertias_m4
+    })
+    
+    # Paper Geometry: 360 inch (9.144 m) square bays
+    st.session_state.nodes_data = pd.DataFrame({
+        "Node_ID": [1, 2, 3, 4, 5, 6], 
+        "X_m": [18.288, 18.288, 9.144, 9.144, 0.0, 0.0], 
+        "Y_m": [9.144, 0.0, 9.144, 0.0, 9.144, 0.0], 
+        "Support_X": [0, 0, 0, 0, 1, 1], # Nodes 5 and 6 are pinned to the wall
+        "Support_Y": [0, 0, 0, 0, 1, 1]
+    })
+    
+    st.session_state.elements_data = pd.DataFrame({
+        "Element_ID": list(range(1, 11)), 
+        "Start_Node": [5, 3, 6, 4, 3, 1, 5, 6, 3, 4], 
+        "End_Node":   [3, 1, 4, 2, 4, 2, 4, 3, 2, 1]
+    })
+    
+    # Paper Load: 100 kips downward at nodes 2 and 4. (100 kips = 444,822 Newtons)
+    st.session_state.loads_data = pd.DataFrame({
+        "Node_ID": [2, 4], 
+        "Load_X_N": [0.0, 0.0], 
+        "Load_Y_N": [-444822.0, -444822.0]
+    })
 def load_preset_king_post():
     clear_editor_keys()
     st.session_state.sections_data = pd.DataFrame({"Section_ID": [0, 1, 2, 3, 4], "Area_m2": [0.001, 0.002, 0.004, 0.006, 0.010], "Inertia_m4": [0.01, 0.02, 0.03, 0.04, 0.05]})
@@ -67,6 +103,9 @@ if 'nodes_data' not in st.session_state:
 
 # --- 1. UI INPUTS ---
 st.sidebar.header("Library Presets")
+if st.sidebar.button("10-Bar Benchmark"):
+    load_preset_10_bar()
+    st.rerun()
 if st.sidebar.button("King Post"):
     load_preset_king_post()
     st.rerun()
