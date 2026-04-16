@@ -111,7 +111,14 @@ def plot_truss(nodes, elements, current_H, sec_indices=None, title="Truss"):
 def convert_df(df):
     return df.to_csv(index=False).encode('utf-8')
 
+# --- SHOW INITIAL GRAPH ---
+st.markdown("---")
+st.subheader("Initial Truss Geometry & Loading")
+st.markdown("*Note: Purple loads show combined external forces + calculated self-weight at nodes.*")
+fig_init = plot_truss(nodes_df, elements_df, initial_peak_y, title=f"Input Topology (Span: {actual_span:.2f} m)")
+st.pyplot(fig_init)
 # --- 2. OPENSEES EVALUATION CORE ---
+
 def evaluate_truss_core(vars, return_results=False):
     H = vars[0]
     section_indices = np.round(vars[1:]).astype(int)
