@@ -84,13 +84,36 @@ def plot_truss(nodes, elements, current_H, sec_indices=None, title="Truss"):
     y_scale = current_H / initial_peak_y
     node_coords = {}
     
+    # 1. Plot Nodes and Labels
     for _, row in nodes.iterrows():
         n_id = int(row["Node_ID"])
         x = row["X_m"]
         y_actual = row["Y_m"] * y_scale 
         node_coords[n_id] = (x, y_actual)
         ax.plot(x, y_actual, 'ko', markersize=6, zorder=3)
+        label = f"N{n_id}\n({x:.2f}, {y_actual:.2f})"
+        ax.text(x, y_actual + 0.2, label, fontsize=8, ha='center', color='darkred', weight='bold')
 
+    # 2. Plot Nodal Loads (External + Self-weight)
+    combined_loads = get_total_nodal_loads(current_H, sec_indices)
+    for n_id, forces in combined_loads.items():
+        Fx_kN = forces[0] / 1000.0
+        Fy_kN = forces[1] / 1000.0
+        
+        if abs(Fx_kN) > 0.01 or abs(Fy_kN) > 0.01:
+            x, y_actual = node_coords[n_id]
+            if abs(Fx_kN) < 0.01: 
+                load_str = f"↓ {abs(Fy_kN):.1f} kN" if Fy_kN < 0 else f"↑ {abs(Fy_kN):.1f} kN"
+                offset_y = -0.6 if Fy_kN < 0 else 0.6
+                ax.text(x, y_actual + offset_y, load_str, fontsize=8, ha='center', color='purple', weight='bold')
+            elif abs(Fy_kN) < 0.01:
+                load_str = f"← {abs(Fx_kN):.1f} kN" if Fx_kN < 0 else f"→ {abs(Fx_kN):.1f} kN"
+                ax.text(x + ( -0.8 if Fx_kN < 0 else 0.8), y_actual, load_str, fontsize=8, ha='center', color='purple', weight='bold')
+            else:
+                load_str = f"({Fx_kN:.1f}, {Fy_kN:.1f}) kN"
+                ax.text(x, y_actual - 0.6, load_str, fontsize=8, ha='center', color='purple', weight='bold')
+
+    # 3. Plot Elements
     for i, (_, row) in enumerate(elements.iterrows()):
         n1, n2 = int(row["Start_Node"]), int(row["End_Node"])
         lw, color = 2, 'gray'
