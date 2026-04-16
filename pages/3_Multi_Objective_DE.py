@@ -207,7 +207,11 @@ if st.button("Run Multi-Objective DE", type="primary"):
     
     progress_bar = st.progress(0)
     status_text = st.empty()
-    plot_placeholder = st.empty()
+    
+    # Placeholders for side-by-side live updates
+    col_plot1, col_plot2 = st.columns(2)
+    live_truss_placeholder = col_plot1.empty()
+    live_pareto_placeholder = col_plot2.empty()
     
     pareto_F = []
     pareto_X = []
@@ -215,25 +219,57 @@ if st.button("Run Multi-Objective DE", type="primary"):
     # Generate weights from 0.0 to 1.0
     weights = np.linspace(0, 1, num_points)
     
+    # Stagnation setup for speed
+    STAGNATION_LIMIT = 5          
+    STAGNATION_TOLERANCE = 0.001  
+    
     with st.spinner('Running Differential Evolution iteratively to build Pareto Front...'):
         for i, w in enumerate(weights):
             status_text.markdown(f"**Optimizing Point {i+1}/{num_points}** (Weight Factor $w$ = {w:.2f})...")
             
-            # Run SciPy's single-objective DE for the current weight
+            # Reset the stagnation history for each new point on the Pareto front
+            st.session_state.best_history = []
+            
+            def live_update_callback(xk, convergence):
+                # 1. Update the Live Truss Plot
+                current_H = xk[0]
+                current_sections = np.round(xk[1:]).astype(int)
+                fig_truss = plot_truss(nodes_df, elements_df, current_H, sec_indices=current_sections, title=f"Evolving Topology ($w$ = {w:.2f})")
+                live_truss_placeholder.pyplot(fig_truss)
+                plt.close(fig_truss)
+                
+                # 2. Check for stagnation (Smart Stop) to speed up execution
+                current_obj = evaluate_weighted_truss(xk, w)
+                st.session_state.best_history.append(current_obj)
+                
+                if len(st.session_state.best_history) > STAGNATION_LIMIT:
+                    st.session_state.best_history.pop(0)
+                    
+                if len(st.session_state.best_history) == STAGNATION_LIMIT:
+                    oldest_obj = st.session_state.best_history[0]
+                    newest_obj = st.session_state.best_history[-1]
+                    # Prevent division by zero
+                    if oldest_obj != 0: 
+                        improvement = abs(oldest_obj - newest_obj) / abs(oldest_obj)
+                        if improvement <= STAGNATION_TOLERANCE:
+                            return True # Halt optimization for this specific point
+            
+            # Run SciPy's DE for the current weight
             res = differential_evolution(
                 evaluate_weighted_truss, 
                 bounds, 
-                args=(w, 5000.0, 0.05), # Passing normalization constants
+                args=(w, 5000.0, 0.05), # Normalization constants
                 maxiter=1000, 
                 popsize=15, 
                 mutation=(0.5, 1.0), 
                 recombination=0.7, 
-                tol=1e-3
+                tol=1e-3,
+                callback=live_update_callback
             )
             
-            if res.success:
+            # If successful or stopped early via our callback
+            if res.success or "callback" in res.message.lower() or "stop early" in res.message.lower():
                 pareto_X.append(res.x)
-                # Recover the actual (non-normalized) weight and deflection for plotting
                 actual_weight, actual_deflection, _ = evaluate_truss_core(res.x)
                 pareto_F.append([actual_weight, actual_deflection * 1000]) # Deflection in mm
                 
@@ -245,7 +281,7 @@ if st.button("Run Multi-Objective DE", type="primary"):
                 ax.set_xlabel("Objective 1: Weight (kg)")
                 ax.set_ylabel("Objective 2: Max Deflection (mm)")
                 ax.grid(True, linestyle='--', alpha=0.6)
-                plot_placeholder.pyplot(fig)
+                live_pareto_placeholder.pyplot(fig)
                 plt.close(fig)
                 
             progress_bar.progress((i + 1) / num_points)
@@ -260,7 +296,7 @@ if st.button("Run Multi-Objective DE", type="primary"):
             st.session_state.pareto_X = pareto_X_arr[sort_idx]
             status_text.success("✅ Multi-Objective Optimization via Differential Evolution Complete!")
         else:
-            st.error("Optimization failed to find feasible solutions.")
+            status_text.error("Optimization failed to find feasible solutions.")
 
 # --- 5. POST-OPTIMIZATION EXPLORER ---
 if 'pareto_F' in st.session_state:
