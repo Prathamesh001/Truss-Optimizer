@@ -55,7 +55,7 @@ def load_preset_10_bar():
     st.session_state.loads_data = pd.DataFrame({
         "Node_ID": [2, 4], 
         "Load_X_N": [0.0, 0.0], 
-        "Load_Y_N": [-444822.0, -444822.0]
+        "Load_Y_N": [-111205.0, -111205.0]
     })
 def load_preset_king_post():
     clear_editor_keys()
