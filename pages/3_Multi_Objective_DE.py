@@ -7,7 +7,7 @@ import math
 import matplotlib.pyplot as plt
 
 st.set_page_config(page_title="MOO Truss Optimizer (DE)", layout="wide")
-st.title("Multi-Objective Truss Optimizer (SciPy DE)")
+st.title("Multi-Objective Truss Optimizer (DE)")
 st.markdown("Optimizing for **Minimum Weight** and **Maximum Stiffness** using **Differential Evolution** via the Weighted Sum method.")
 
 # --- 0. SESSION STATE & PRESETS (Same as before) ---
@@ -40,6 +40,8 @@ st.sidebar.markdown("---")
 st.sidebar.subheader("About the Developer")
 st.sidebar.markdown("**Prathamesh Varma**\nM.E. Structural Engineering\nID: 2025H1430015H")
 st.sidebar.markdown("🔗 [LinkedIn](https://www.linkedin.com/in/prathameshvarma)")
+st.sidebar.markdown("Under the Guidance of Prof. Vasan Arunachalam)")
+st.sidebar.markdown("[Web Link] (https://www.bits-pilani.ac.in/hyderabad/a-vasan/)")
 
 col1, col2 = st.columns(2)
 with col1:
